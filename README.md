@@ -28,12 +28,12 @@ Diante do crescimento da demanda e da complexidade operacional, foi desenvolvido
 
 ##  Equipe
 
-| Integrante | Responsabilidade | 
-|---|---|---|
-| **Breno Oliveira** | Arquitetura, DevOps e Metodologias |
-| **Cauã Máximo** | Engenharia de Requisitos e Viabilidade |
-| **Diego Maia** | UML e Análise de Sistema |
-| **Kauê Scatigno** | Modelagem e Banco de Dados |
+| Integrante | Responsabilidade |
+|---|---|
+| Breno Oliveira | Arquitetura, DevOps e Metodologias |
+| Cauã Máximo | Engenharia de Requisitos e Viabilidade |
+| Diego Maia | UML e Análise de Sistema |
+| Kauê Scatigno | Modelagem e Banco de Dados |
 
 **Professor:** W. Fernando
 
