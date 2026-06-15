@@ -26,9 +26,9 @@ Diante do crescimento da demanda e da complexidade operacional, foi desenvolvido
 
 ---
 
-## 👥 Equipe
+##  Equipe
 
-| Integrante | RA | Responsabilidade |
+| Integrante | Responsabilidade | 
 |---|---|---|
 | **Breno Oliveira** | Arquitetura, DevOps e Metodologias |
 | **Cauã Máximo** | Engenharia de Requisitos e Viabilidade |
