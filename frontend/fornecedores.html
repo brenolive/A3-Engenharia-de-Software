@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fornecedores — Madeira Verde</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+
+  <style>
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-icon:hover  { opacity: .85; transform: scale(1.1); }
+    .btn-icon:active { transform: scale(.95); }
+
+    .btn-ver     { background: #3b82f6; color: #fff; }
+    .btn-editar  { background: #f59e0b; color: #fff; }
+    .btn-excluir { background: #ef4444; color: #fff; }
+
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    #modal-overlay.aberto { display: flex; }
+
+    #modal-caixa {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      width: min(95vw, 560px);
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      position: relative;
+      animation: modalEntrar .2s ease;
+    }
+    @keyframes modalEntrar {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #modal-titulo {
+      margin: 0 0 1.25rem;
+      font-size: 1.2rem;
+      color: var(--verde-escuro, #1a5c2a);
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: .6rem;
+    }
+
+    #modal-corpo p {
+      margin: .45rem 0;
+      font-size: .95rem;
+      line-height: 1.6;
+    }
+    #modal-corpo strong { color: #374151; }
+
+    #modal-fechar {
+      margin-top: 1.5rem;
+      display: block;
+      width: 100%;
+      padding: .6rem;
+      background: #6b7280;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background .2s;
+    }
+    #modal-fechar:hover { background: #4b5563; }
+
+    #btn-cancelar-edicao { display: none; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a class="navbar-brand" href="/static/index.html">
+      <span class="logo-icon">🌿</span>Madeira Verde
+    </a>
+    <ul class="navbar-links">
+      <li><a href="/static/fornecedores.html" class="active">Fornecedores</a></li>
+      <li><a href="/static/componentes.html">Componentes</a></li>
+      <li><a href="/static/produtos.html">Produtos</a></li>
+      <li><a href="/static/empregados.html">Empregados</a></li>
+      <li><a href="/static/clientes.html">Clientes</a></li>
+      <li><a href="/static/encomendas.html">Encomendas</a></li>
+      <li><a href="/static/manutencoes.html">Manutenções</a></li>
+      <li><a href="/static/dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+
+  <main>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🚚</span>
+        <h2 id="titulo-form-forn">Cadastro de Fornecedor</h2>
+      </div>
+
+      <div id="alerta-forn" class="alert alert-hidden"></div>
+
+      <form id="form-fornecedor" novalidate>
+
+        <input type="hidden" id="fornecedor-id" value="" />
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="cnpj-forn">CNPJ <span class="required">*</span></label>
+            <input type="text" id="cnpj-forn"
+                   placeholder="00.000.000/0000-00" maxlength="18" required />
+          </div>
+
+          <div class="form-group">
+            <label for="razao-forn">Razão Social <span class="required">*</span></label>
+            <input type="text" id="razao-forn" placeholder="Nome jurídico" required />
+          </div>
+
+          <div class="form-group">
+            <label for="fantasia-forn">Nome Fantasia</label>
+            <input type="text" id="fantasia-forn" placeholder="Nome comercial" />
+          </div>
+
+          <div class="form-group">
+            <label for="email-forn">E-mail</label>
+            <input type="email" id="email-forn" placeholder="email@fornecedor.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="tel-forn">Telefone</label>
+            <input type="text" id="tel-forn" placeholder="(11) 98765-4321" />
+          </div>
+
+          <div class="form-group">
+            <label for="cidade-forn">Cidade</label>
+            <input type="text" id="cidade-forn" placeholder="Cidade" />
+          </div>
+
+          <div class="form-group">
+            <label for="estado-forn">UF</label>
+            <select id="estado-forn">
+              <option value="">Selecione...</option>
+              <option>AC</option><option>AL</option><option>AM</option>
+              <option>BA</option><option>CE</option><option>DF</option>
+              <option>ES</option><option>GO</option><option>MA</option>
+              <option>MG</option><option>MS</option><option>MT</option>
+              <option>PA</option><option>PB</option><option>PE</option>
+              <option>PI</option><option>PR</option><option>RJ</option>
+              <option>RN</option><option>RO</option><option>RR</option>
+              <option>RS</option><option>SC</option><option>SE</option>
+              <option>SP</option><option>TO</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary"
+                  onclick="document.getElementById('form-fornecedor').reset();
+                           document.getElementById('fornecedor-id').value='';">
+            🗑️ Limpar
+          </button>
+
+          <button type="button" class="btn btn-secondary"
+                  id="btn-cancelar-edicao"
+                  onclick="cancelarEdicaoFornecedor()">
+            ✖ Cancelar Edição
+          </button>
+
+          <button type="submit" class="btn btn-primary" id="btn-forn">
+            💾 Salvar Fornecedor
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🔗</span>
+        <h2>Vincular Componente ao Fornecedor</h2>
+      </div>
+
+      <div id="alerta-vf" class="alert alert-hidden"></div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Fornecedor</label>
+          <select id="sel-forn-vinc" onchange="listarCompForn()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Componente</label>
+          <select id="sel-comp-forn">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Preço Unitário (R$)</label>
+          <input type="number" id="preco-forn" min="0" step="0.01"
+                 placeholder="0,00" />
+        </div>
+
+        <div class="form-group">
+          <label>Prazo de Entrega (dias)</label>
+          <input type="number" id="prazo-forn" min="1" placeholder="Ex: 7" />
+        </div>
+
+        <div class="form-group">
+          <label>Fornecedor Preferencial?</label>
+          <select id="pref-forn">
+            <option value="false">Não</option>
+            <option value="true">Sim</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="vincularCompForn()">
+          🔗 Vincular
+        </button>
+      </div>
+
+      <div id="lista-comp-forn" style="margin-top:1rem; display:none">
+        <h3 style="color:var(--verde-escuro); margin-bottom:0.75rem;">
+          📦 Componentes deste Fornecedor
+        </h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>Preço Unit.</th>
+                <th>Prazo (dias)</th>
+                <th>Preferencial</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-comp-forn"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">📋</span>
+        <h2>Fornecedores Cadastrados</h2>
+        <button class="btn btn-secondary btn-sm"
+                onclick="carregarFornecedores()" style="margin-left:auto">
+          🔄 Atualizar
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>CNPJ</th>
+              <th>Razão Social</th>
+              <th>E-mail</th>
+              <th>Cidade/UF</th>
+              <th style="text-align:center; width:110px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-fornecedores">
+            <tr>
+              <td colspan="6" style="text-align:center; padding:2rem;
+                                     color:var(--cinza-escuro)">
+                Carregando...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>🌿 Madeira Verde</p>
+  </footer>
+
+  <div id="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modal-titulo"
+       onclick="fecharModalFora(event)">
+    <div id="modal-caixa">
+      <h3 id="modal-titulo">Detalhes do Fornecedor</h3>
+      <div id="modal-corpo"></div>
+      <button id="modal-fechar" onclick="fecharModal()">✖ Fechar</button>
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/fornecedores.js"></script>
+
+  <script>
+    function abrirModal(titulo, corpoHTML) {
+      document.getElementById('modal-titulo').textContent = titulo;
+      document.getElementById('modal-corpo').innerHTML   = corpoHTML;
+      document.getElementById('modal-overlay').classList.add('aberto');
+      document.getElementById('modal-fechar').focus();
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('aberto');
+    }
+
+    function fecharModalFora(e) {
+      if (e.target === document.getElementById('modal-overlay')) fecharModal();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') fecharModal();
+    });
+  </script>
+
+</body>
+</html>

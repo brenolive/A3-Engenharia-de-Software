@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Empregados — Madeira Verde</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+
+  <style>
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-icon:hover  { opacity: .85; transform: scale(1.1); }
+    .btn-icon:active { transform: scale(.95); }
+
+    .btn-ver     { background: #3b82f6; color: #fff; }
+    .btn-editar  { background: #f59e0b; color: #fff; }
+    .btn-excluir { background: #ef4444; color: #fff; }
+
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    #modal-overlay.aberto { display: flex; }
+
+    #modal-caixa {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      width: min(95vw, 560px);
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      position: relative;
+      animation: modalEntrar .2s ease;
+    }
+    @keyframes modalEntrar {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #modal-titulo {
+      margin: 0 0 1.25rem;
+      font-size: 1.2rem;
+      color: var(--verde-escuro, #1a5c2a);
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: .6rem;
+    }
+
+    #modal-corpo p {
+      margin: .45rem 0;
+      font-size: .95rem;
+      line-height: 1.6;
+    }
+    #modal-corpo strong { color: #374151; }
+
+    #modal-corpo .modal-bloco {
+      background: #f9fafb;
+      border-left: 3px solid var(--verde-escuro, #1a5c2a);
+      border-radius: 4px;
+      padding: .6rem .9rem;
+      margin: .6rem 0;
+      font-size: .9rem;
+      white-space: pre-wrap;
+      color: #374151;
+    }
+
+    #modal-corpo .badge-cargo {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: .2rem .65rem;
+      border-radius: 20px;
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
+    #modal-fechar {
+      margin-top: 1.5rem;
+      display: block;
+      width: 100%;
+      padding: .6rem;
+      background: #6b7280;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background .2s;
+    }
+    #modal-fechar:hover { background: #4b5563; }
+
+    #btn-cancelar-edicao { display: none; }
+
+    #aviso-supervisor {
+      display: none;
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      border-radius: 4px;
+      padding: .5rem .75rem;
+      font-size: .85rem;
+      color: #92400e;
+      margin-top: .35rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a class="navbar-brand" href="/static/index.html">
+      <span class="logo-icon">🌿</span>Madeira Verde
+    </a>
+    <ul class="navbar-links">
+      <li><a href="/static/fornecedores.html">Fornecedores</a></li>
+      <li><a href="/static/componentes.html">Componentes</a></li>
+      <li><a href="/static/produtos.html">Produtos</a></li>
+      <li><a href="/static/empregados.html" class="active">Empregados</a></li>
+      <li><a href="/static/clientes.html">Clientes</a></li>
+      <li><a href="/static/encomendas.html">Encomendas</a></li>
+      <li><a href="/static/manutencoes.html">Manutenções</a></li>
+      <li><a href="/static/dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+
+  <main>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">👷</span>
+        <h2 id="titulo-form-emp">Cadastro de Empregado</h2>
+      </div>
+
+      <div id="alerta-emp" class="alert alert-hidden"></div>
+
+      <form id="form-empregado" novalidate>
+
+        <input type="hidden" id="empregado-id" value="" />
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="matricula">Matrícula <span class="required">*</span></label>
+            <input type="text" id="matricula" placeholder="Ex: MAT-001" required />
+          </div>
+
+          <div class="form-group">
+            <label for="nome-emp">Nome Completo <span class="required">*</span></label>
+            <input type="text" id="nome-emp" placeholder="Nome completo" required />
+          </div>
+
+          <div class="form-group">
+            <label for="cpf-emp">CPF <span class="required">*</span></label>
+            <input type="text" id="cpf-emp" placeholder="000.000.000-00"
+                   maxlength="14" required />
+          </div>
+
+          <div class="form-group">
+            <label for="cargo">Cargo <span class="required">*</span></label>
+            <select id="cargo" required>
+              <option value="">Selecione...</option>
+              <option>Gerente</option>
+              <option>Supervisor</option>
+              <option>Marceneiro</option>
+              <option>Operador de Máquina</option>
+              <option>Auxiliar de Produção</option>
+              <option>Pintor</option>
+              <option>Montador</option>
+              <option>Almoxarife</option>
+              <option>Motorista</option>
+              <option>Outro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="salario">Salário (R$) <span class="required">*</span></label>
+            <input type="number" id="salario" min="0" step="0.01"
+                   placeholder="0,00" required />
+          </div>
+
+          <div class="form-group">
+            <label for="admissao">Data de Admissão <span class="required">*</span></label>
+            <input type="date" id="admissao" required />
+          </div>
+
+          <div class="form-group">
+            <label for="email-emp">E-mail</label>
+            <input type="email" id="email-emp" placeholder="email@empresa.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="tel-emp">Telefone</label>
+            <input type="text" id="tel-emp" placeholder="(11) 98765-4321" />
+          </div>
+
+          <div class="form-group">
+            <label for="supervisor">
+              Supervisor
+              <span style="font-size:.8rem; color:#6b7280;">
+                (RN-10: não pode ser ele mesmo)
+              </span>
+            </label>
+            <select id="supervisor">
+              <option value="">Sem supervisor</option>
+            </select>
+            <div id="aviso-supervisor">
+              ⚠️ O empregado não pode ser seu próprio supervisor.
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="qualif">Qualificações Profissionais</label>
+            <textarea id="qualif"
+                      placeholder="Descreva as qualificações..."></textarea>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary"
+                  onclick="document.getElementById('form-empregado').reset();
+                           document.getElementById('empregado-id').value='';">
+            🗑️ Limpar
+          </button>
+
+          <button type="button" class="btn btn-secondary"
+                  id="btn-cancelar-edicao"
+                  onclick="cancelarEdicaoEmpregado()">
+            ✖ Cancelar Edição
+          </button>
+
+          <button type="submit" class="btn btn-primary" id="btn-emp">
+            💾 Salvar Empregado
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">📋</span>
+        <h2>Empregados Cadastrados</h2>
+        <button class="btn btn-secondary btn-sm"
+                onclick="carregarEmpregados()" style="margin-left:auto">
+          🔄 Atualizar
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Matrícula</th>
+              <th>Nome</th>
+              <th>Cargo</th>
+              <th>Salário</th>
+              <th>Admissão</th>
+              <th>Supervisor</th>
+              <th style="text-align:center; width:110px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-empregados">
+            <tr>
+              <td colspan="8" style="text-align:center; padding:2rem;
+                                     color:var(--cinza-escuro)">
+                Carregando...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>🌿 Madeira Verde</p>
+  </footer>
+
+  <div id="modal-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="modal-titulo"
+       onclick="fecharModalFora(event)">
+    <div id="modal-caixa">
+      <h3 id="modal-titulo">Detalhes do Empregado</h3>
+      <div id="modal-corpo"></div>
+      <button id="modal-fechar" onclick="fecharModal()">✖ Fechar</button>
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/empregados.js"></script>
+
+  <script>
+    function abrirModal(titulo, corpoHTML) {
+      document.getElementById('modal-titulo').textContent = titulo;
+      document.getElementById('modal-corpo').innerHTML   = corpoHTML;
+      document.getElementById('modal-overlay').classList.add('aberto');
+      document.getElementById('modal-fechar').focus();
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('aberto');
+    }
+
+    function fecharModalFora(e) {
+      if (e.target === document.getElementById('modal-overlay')) fecharModal();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') fecharModal();
+    });
+  </script>
+
+</body>
+</html>

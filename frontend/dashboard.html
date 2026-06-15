@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Madeira Verde</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { background: #f1f5f9; }
+
+    .dash-header {
+      background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+      color: #fff; padding: 1.2rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .dash-header h1 { font-size: 1.4rem; margin: 0; letter-spacing: 0.02em; }
+    .dash-header a  {
+      color: #bbf7d0; font-size: 0.85rem; text-decoration: none;
+      border: 1px solid #bbf7d0; border-radius: 6px;
+      padding: 0.3rem 0.8rem; transition: background 0.2s;
+    }
+    .dash-header a:hover { background: rgba(255,255,255,0.15); }
+
+    .dash-container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+    .dash-toolbar {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+    .dash-toolbar h2 { margin: 0; font-size: 1.3rem; color: #1e293b; }
+    .dash-toolbar-right { display: flex; align-items: center; gap: 1rem; }
+    .ts { font-size: 0.8rem; color: #94a3b8; }
+
+    .btn-refresh {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: #166534; color: #fff; border: none;
+      border-radius: 8px; padding: 0.5rem 1.2rem;
+      font-size: 0.9rem; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-refresh:hover    { background: #14532d; }
+    .btn-refresh:disabled { background: #86efac; cursor: not-allowed; }
+
+    .dash-erro {
+      display: none; background: #fee2e2; color: #b91c1c;
+      border: 1px solid #fca5a5; border-radius: 10px;
+      padding: 1rem 1.5rem; margin-bottom: 1.2rem;
+    }
+
+    /* ── KPIs ─────────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .kpi {
+      background: #fff; border-radius: 12px;
+      padding: 1.1rem 1rem; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border-top: 4px solid #e2e8f0;
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .kpi:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+    .kpi.blue   { border-color: #3b82f6; }
+    .kpi.green  { border-color: #22c55e; }
+    .kpi.purple { border-color: #a855f7; }
+    .kpi.amber  { border-color: #f59e0b; }
+    .kpi.teal   { border-color: #14b8a6; }
+    .kpi.red    { border-color: #ef4444; }
+    .kpi.orange { border-color: #f97316; }
+    .kpi.indigo { border-color: #6366f1; }
+    .kpi.rose   { border-color: #f43f5e; }
+    .kpi.cyan   { border-color: #06b6d4; }
+
+    .kpi-icon  { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .kpi-valor {
+      font-size: 1.45rem; font-weight: 700; color: #1e293b;
+      margin-bottom: 0.2rem; word-break: break-word;
+    }
+    .kpi-valor.loading { color: #cbd5e1; animation: pulse 1.2s infinite; }
+    .kpi-label { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-sub   { font-size: 0.70rem; color: #94a3b8; margin-top: 0.25rem; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* ── Layouts ───────────────────────────────────────────── */
+    .dash-grid-full  { margin-bottom: 1.2rem; }
+    .dash-grid {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 1.2rem; margin-bottom: 1.2rem;
+    }
+    .dash-grid-2 {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1.2rem; margin-bottom: 1.2rem;
+    }
+    .dash-grid-3 {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.2rem; margin-bottom: 1.2rem;
+    }
+    @media (max-width: 900px) {
+      .dash-grid, .dash-grid-2, .dash-grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .section-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 1.2rem 1.4rem;
+    }
+    .section-title {
+      font-size: 0.95rem; font-weight: 600; color: #334155;
+      margin: 0 0 1rem; padding-bottom: 0.6rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    .chart-empty {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 160px; color: #94a3b8; font-size: 0.9rem; gap: 0.5rem;
+    }
+    .chart-empty span { font-size: 2rem; }
+
+    .donut-wrap { position: relative; }
+    .donut-center {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      text-align: center; pointer-events: none;
+    }
+    .donut-center strong { font-size: 1.4rem; color: #1e293b; display: block; }
+    .donut-center span   { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+
+    /* ── Tabelas ───────────────────────────────────────────── */
+    .dash-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .dash-table th {
+      text-align: left; padding: 0.45rem 0.6rem; color: #94a3b8;
+      font-weight: 600; font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.04em; border-bottom: 1px solid #f1f5f9;
+    }
+    .dash-table td {
+      padding: 0.55rem 0.6rem; color: #334155;
+      border-bottom: 1px solid #f8fafc;
+    }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tr:hover td      { background: #f8fafc; }
+
+    /* ── Badges ────────────────────────────────────────────── */
+    .b {
+      display: inline-block; font-size: 0.72rem; font-weight: 600;
+      padding: 0.15rem 0.55rem; border-radius: 99px;
+    }
+    .b-pend { background: #fef9c3; color: #92400e; }
+    .b-prod { background: #dbeafe; color: #1d4ed8; }
+    .b-entr { background: #dcfce7; color: #166534; }
+    .b-canc { background: #fee2e2; color: #b91c1c; }
+
+    /* ── Status lista ──────────────────────────────────────── */
+    .status-lista { list-style: none; padding: 0; margin: 0; }
+    .status-lista li {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.45rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.83rem;
+    }
+    .status-lista li:last-child { border-bottom: none; }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      display: inline-block; margin-right: 0.5rem; flex-shrink: 0;
+    }
+    .status-pct { font-size: 0.72rem; color: #94a3b8; margin-left: 0.4rem; }
+
+    .bar-wrap { background: #f1f5f9; border-radius: 99px; height: 5px; flex: 1; margin: 0 0.6rem; }
+    .bar-fill { height: 5px; border-radius: 99px; transition: width 0.6s ease; }
+
+    /* ── Alertas / Insights ────────────────────────────────── */
+    .alerta-box {
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: 10px; padding: 0.9rem 1.1rem;
+      font-size: 0.85rem; color: #92400e;
+      display: flex; align-items: flex-start; gap: 0.6rem;
+    }
+    .alerta-box.verde { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    .alerta-box.azul  { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .alerta-box.roxo  { background: #faf5ff; border-color: #e9d5ff; color: #7c3aed; }
+    .alerta-box.cinza { background: #f8fafc; border-color: #e2e8f0; color: #475569; }
+
+    /* ── Seção de dados extras ─────────────────────────────── */
+    .divider {
+      font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.6rem;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="dash-header">
+    <h1>🌿 Madeira Verde</h1>
+    <a href="/static/index.html">← Voltar ao Menu</a>
+  </header>
+
+  <main class="dash-container">
+
+    <div class="dash-toolbar">
+      <h2>📊 Dashboard de Gestão</h2>
+      <div class="dash-toolbar-right">
+        <span class="ts" id="ts"></span>
+        <button class="btn-refresh" id="btn-refresh" onclick="carregar()">
+          🔄 Atualizar
+        </button>
+      </div>
+    </div>
+
+    <div class="dash-erro" id="dash-erro">
+      ⚠️ Não foi possível carregar os dados. Verifique se a API está rodando em
+      <strong>http://localhost:8000</strong>.
+    </div>
+
+    <!-- ── KPIs principais ────────────────────────────────── -->
+    <div class="kpi-grid" id="kpi-grid">
+
+      <div class="kpi blue">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-valor loading" id="k-clientes">--</div>
+        <div class="kpi-label">Clientes</div>
+      </div>
+
+      <div class="kpi green">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-valor loading" id="k-produtos">--</div>
+        <div class="kpi-label">Produtos</div>
+      </div>
+
+      <div class="kpi indigo">
+        <div class="kpi-icon">🔩</div>
+        <div class="kpi-valor loading" id="k-componentes">--</div>
+        <div class="kpi-label">Componentes</div>
+      </div>
+
+      <div class="kpi cyan">
+        <div class="kpi-icon">🏭</div>
+        <div class="kpi-valor loading" id="k-fornecedores">--</div>
+        <div class="kpi-label">Fornecedores</div>
+      </div>
+
+      <div class="kpi rose">
+        <div class="kpi-icon">👷</div>
+        <div class="kpi-valor loading" id="k-empregados">--</div>
+        <div class="kpi-label">Empregados</div>
+      </div>
+
+      <div class="kpi purple">
+        <div class="kpi-icon">🛒</div>
+        <div class="kpi-valor loading" id="k-encomendas">--</div>
+        <div class="kpi-label">Encomendas</div>
+        <div class="kpi-sub" id="k-pendentes"></div>
+      </div>
+
+      <div class="kpi amber">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-valor loading" id="k-bruto">--</div>
+        <div class="kpi-label">Faturamento Bruto</div>
+      </div>
+
+      <div class="kpi teal">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-valor loading" id="k-liquido">--</div>
+        <div class="kpi-label">Faturamento Líquido</div>
+        <div class="kpi-sub" id="k-ticket"></div>
+      </div>
+
+      <div class="kpi orange">
+        <div class="kpi-icon">📉</div>
+        <div class="kpi-valor loading" id="k-desconto">--</div>
+        <div class="kpi-label">Total em Descontos</div>
+      </div>
+
+      <div class="kpi red">
+        <div class="kpi-icon">⚙️</div>
+        <div class="kpi-valor loading" id="k-manut">--</div>
+        <div class="kpi-label">Máq. em Manutenção</div>
+      </div>
+
+    </div>
+
+    <!-- ── Gráfico Bruto vs Líquido ───────────────────────── -->
+    <div class="dash-grid-full">
+      <div class="section-card">
+        <p class="section-title">📊 Faturamento Bruto vs Líquido por Período</p>
+        <div id="wrap-fat-comp">
+          <canvas id="chart-fat-comp" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Evolução + Donut status ────────────────────────── -->
+    <div class="dash-grid">
+      <div class="section-card">
+        <p class="section-title">📈 Evolução do Faturamento Líquido</p>
+        <div id="wrap-fat">
+          <canvas id="chart-fat" height="120"></canvas>
+        </div>
+      </div>
+      <div class="section-card">
+        <p class="section-title">🔵 Status das Encomendas</p>
+        <div class="donut-wrap">
+          <canvas id="chart-status" height="170"></canvas>
+          <div class="donut-center">
+            <strong id="donut-total">--</strong>
+            <span>encomendas</span>
+          </div>
+        </div>
+        <ul class="status-lista" id="status-lista" style="margin-top:0.75rem"></ul>
+      </div>
+    </div>
+
+    <!-- ── Últimas + Top Clientes + Insights ─────────────── -->
+    <div class="dash-grid-3">
+      <div class="section-card">
+        <p class="section-title">🕐 Últimas Encomendas</p>
+        <table class="dash-table">
+          <thead>
+            <tr><th>Número</th><th>Cliente</th><th>Valor</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tb-ultimas">
+            <tr><td colspan="4" style="color:#94a3b8;text-align:center">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-card">
+        <p class="section-title">🏆 Top Clientes por Faturamento</p>
+        <div id="top-clientes-wrap"></div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-title">💡 Insights</p>
+        <div id="insights" style="display:flex;flex-direction:column;gap:0.75rem">
+          <div style="color:#94a3b8;font-size:0.85rem">Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Divider ─────────────────────────────────────────── -->
+    <div class="divider">📦 Detalhe de Encomendas</div>
+
+    <!-- ── Em Produção + Canceladas ──────────────────────── -->
+    <div class="dash-grid-2">
+
+      <div class="section-card">
+        <p class="section-title">🔧 Em Produção</p>
+        <table class="dash-table">
+          <thead>
+            <tr><th>Número</th><th>Cliente</th><th>Valor</th><th>Entrega Prevista</th></tr>
+          </thead>
+          <tbody id="tb-em-producao">
+            <tr><td colspan="4" style="color:#94a3b8;text-align:center">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-card">
+        <p class="section-title">❌ Canceladas</p>
+        <table class="dash-table">
+          <thead>
+            <tr><th>Número</th><th>Cliente</th><th>Valor</th><th>Data</th></tr>
+          </thead>
+          <tbody id="tb-canceladas">
+            <tr><td colspan="4" style="color:#94a3b8;text-align:center">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- ── Divider ─────────────────────────────────────────── -->
+    <div class="divider">📊 Produtos & Desempenho</div>
+
+    <!-- ── Top Produtos + Entregas ───────────────────────── -->
+    <div class="dash-grid-2">
+
+      <div class="section-card">
+        <p class="section-title">🪑 Top Produtos por Receita</p>
+        <div id="top-produtos-wrap"></div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-title">📅 Últimos 30 Dias</p>
+        <div id="ultimos-30-wrap"
+             style="display:flex;flex-direction:column;gap:0.75rem">
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    const API_URL = 'http://localhost:8000';
+    let chartFat = null, chartFatComp = null, chartStatus = null;
+
+    const moeda = v => Number(v || 0).toLocaleString('pt-BR', {
+      style: 'currency', currency: 'BRL', minimumFractionDigits: 2
+    });
+
+    const fmtData = s => {
+      if (!s || s === '—') return '—';
+      const [a, m, d] = s.split('-');
+      return `${d}/${m}/${a}`;
+    };
+
+    const setK = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val;
+      el.classList.remove('loading');
+    };
+
+    const badgeStatus = s => {
+      const map = {
+        PENDENTE:    ['b-pend', 'Pendente'],
+        EM_PRODUCAO: ['b-prod', 'Em Produção'],
+        ENTREGUE:    ['b-entr', 'Entregue'],
+        CANCELADA:   ['b-canc', 'Cancelada'],
+      };
+      const [cls, label] = map[s] || ['', s];
+      return `<span class="b ${cls}">${label}</span>`;
+    };
+
+    const semDados = (wrapId, msg = 'Dados insuficientes para o gráfico') => {
+      const wrap = document.getElementById(wrapId);
+      if (wrap) wrap.innerHTML = `
+        <div class="chart-empty">
+          <span>📭</span><div>${msg}</div>
+          <small style="color:#cbd5e1">Registre mais dados para visualizar</small>
+        </div>`;
+    };
+
+    const vazio = (tbody, cols, msg = 'Nenhum registro') =>
+      `<tr><td colspan="${cols}"
+            style="color:#94a3b8;text-align:center;padding:1.2rem">${msg}</td></tr>`;
+
+    const barras = (itens, corFn) => itens.length
+      ? itens.map((item, i) => {
+          const max  = itens[0].valor;
+          const pct  = max > 0 ? Math.round((item.valor / max) * 100) : 0;
+          const cor  = corFn ? corFn(i) : '#22c55e';
+          const nome = item.nome.length > 22
+            ? item.nome.slice(0, 22) + '…' : item.nome;
+          return `
+            <div style="margin-bottom:0.85rem;">
+              <div style="display:flex;justify-content:space-between;
+                          font-size:0.82rem;margin-bottom:0.3rem;">
+                <span title="${item.nome}">
+                  <span style="font-weight:700;color:${cor}">${i+1}.</span>
+                  ${nome}
+                </span>
+                <span style="font-weight:600">${item.label}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <div class="bar-wrap" style="flex:1">
+                  <div class="bar-fill" style="width:${pct}%;background:${cor}"></div>
+                </div>
+                <span style="font-size:0.72rem;color:#94a3b8;min-width:32px">
+                  ${item.sub}
+                </span>
+              </div>
+            </div>`;
+        }).join('')
+      : '<div style="color:#94a3b8;font-size:0.85rem;text-align:center;padding:1rem">Nenhum dado</div>';
+
+    const coresBar = ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ef4444'];
+
+    async function carregar() {
+      const btn = document.getElementById('btn-refresh');
+      btn.disabled = true;
+      document.getElementById('dash-erro').style.display = 'none';
+
+      ['k-clientes','k-produtos','k-componentes','k-fornecedores',
+       'k-empregados','k-encomendas','k-bruto','k-liquido',
+       'k-desconto','k-manut'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = '--'; el.classList.add('loading'); }
+      });
+
+      try {
+        const d = await fetch(`${API_URL}/dashboard/totais`).then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        });
+
+        const desconto = d.faturamento_bruto - d.faturamento_liquido;
+        const ticket   = d.encomendas > 0
+          ? d.faturamento_liquido / d.encomendas : 0;
+
+        // ── KPIs ──────────────────────────────────────────────
+        setK('k-clientes',    d.clientes);
+        setK('k-produtos',    d.produtos);
+        setK('k-componentes', d.componentes);
+        setK('k-fornecedores',d.fornecedores);
+        setK('k-empregados',  d.empregados);
+        setK('k-encomendas',  d.encomendas);
+        setK('k-bruto',       moeda(d.faturamento_bruto));
+        setK('k-liquido',     moeda(d.faturamento_liquido));
+        setK('k-desconto',    moeda(desconto));
+        setK('k-manut',       d.maquinas_manutencao);
+
+        const pendEl = document.getElementById('k-pendentes');
+        if (pendEl) pendEl.textContent =
+          `${d.status.pendentes} pend. · ${d.status.em_producao} em prod.`;
+
+        const tickEl = document.getElementById('k-ticket');
+        if (tickEl) tickEl.textContent = `Ticket médio: ${moeda(ticket)}`;
+
+        // ── Gráficos mensal ───────────────────────────────────
+        const meses   = d.faturamento_mensal.map(m => {
+          const [ano, mes] = m.mes.split('-');
+          return `${mes}/${ano}`;
+        });
+        const brutos   = d.faturamento_mensal.map(m => m.bruto  || 0);
+        const liquidos = d.faturamento_mensal.map(m => m.total  || 0);
+
+        // Gráfico 1 — Bruto vs Líquido
+        if (chartFatComp) chartFatComp.destroy();
+        if (meses.length === 0) {
+          semDados('wrap-fat-comp', 'Nenhum faturamento registrado ainda');
+        } else {
+          const wc = document.getElementById('wrap-fat-comp');
+          wc.innerHTML = '<canvas id="chart-fat-comp" height="80"></canvas>';
+          chartFatComp = new Chart(document.getElementById('chart-fat-comp'), {
+            type: 'bar',
+            data: {
+              labels: meses,
+              datasets: [
+                { label: 'Bruto',   data: brutos,
+                  backgroundColor: 'rgba(251,191,36,0.7)', borderColor: '#f59e0b',
+                  borderWidth: 1.5, borderRadius: 6 },
+                { label: 'Líquido', data: liquidos,
+                  backgroundColor: 'rgba(34,197,94,0.7)',  borderColor: '#16a34a',
+                  borderWidth: 1.5, borderRadius: 6 },
+              ]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { position:'top', labels:{ font:{size:12}, boxWidth:14 } },
+                tooltip: { callbacks:{ label: ctx =>
+                  `${ctx.dataset.label}: ${moeda(ctx.parsed.y)}` } }
+              },
+              scales: {
+                y: { ticks:{ callback: v => 'R$ '+Number(v).toLocaleString('pt-BR') },
+                     grid:{ color:'#f1f5f9' } },
+                x: { grid:{ display:false } }
+              }
+            }
+          });
+        }
+
+        // Gráfico 2 — Evolução líquido
+        if (chartFat) chartFat.destroy();
+        if (meses.length === 0) {
+          semDados('wrap-fat','Nenhum período registrado ainda');
+        } else {
+          const wf = document.getElementById('wrap-fat');
+          wf.innerHTML = '<canvas id="chart-fat" height="120"></canvas>';
+          const tipo = meses.length < 2 ? 'bar' : 'line';
+          chartFat = new Chart(document.getElementById('chart-fat'), {
+            type: tipo,
+            data: {
+              labels: meses,
+              datasets: [{
+                label: 'Faturamento Líquido (R$)', data: liquidos,
+                borderColor: '#16a34a', backgroundColor: tipo === 'line'
+                  ? 'rgba(22,163,74,0.08)' : 'rgba(22,163,74,0.6)',
+                borderWidth: 2.5, pointRadius: 5,
+                pointBackgroundColor: '#16a34a',
+                tension: 0.35, fill: tipo === 'line',
+                borderRadius: tipo === 'bar' ? 8 : undefined,
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend:{ display:false },
+                tooltip:{ callbacks:{ label: ctx => moeda(ctx.parsed.y) } }
+              },
+              scales: {
+                y:{ ticks:{ callback: v => 'R$ '+Number(v).toLocaleString('pt-BR') },
+                    grid:{ color:'#f1f5f9' } },
+                x:{ grid:{ display:false } }
+              }
+            }
+          });
+        }
+
+        // Gráfico 3 — Donut status
+        const totalEnc = d.encomendas;
+        document.getElementById('donut-total').textContent = totalEnc;
+        const statusData   = [d.status.pendentes, d.status.em_producao,
+                               d.status.entregues, d.status.canceladas];
+        const statusLabels = ['Pendente','Em Produção','Entregue','Cancelada'];
+        const statusCores  = ['#fbbf24','#3b82f6','#22c55e','#ef4444'];
+
+        if (chartStatus) chartStatus.destroy();
+        chartStatus = new Chart(document.getElementById('chart-status'), {
+          type: 'doughnut',
+          data: {
+            labels: statusLabels,
+            datasets: [{
+              data: statusData, backgroundColor: statusCores,
+              borderWidth: 2, borderColor: '#fff', hoverOffset: 8,
+            }]
+          },
+          options: {
+            responsive: true, cutout: '68%',
+            plugins: {
+              legend: { display:false },
+              tooltip: { callbacks:{ label: ctx => {
+                const pct = totalEnc > 0
+                  ? ((ctx.parsed/totalEnc)*100).toFixed(1) : 0;
+                return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+              }}}
+            }
+          }
+        });
+
+        document.getElementById('status-lista').innerHTML =
+          [['Pendente', d.status.pendentes,'#fbbf24'],
+           ['Em Produção',d.status.em_producao,'#3b82f6'],
+           ['Entregue',  d.status.entregues, '#22c55e'],
+           ['Cancelada', d.status.canceladas,'#ef4444']]
+          .map(([label, val, cor]) => {
+            const pct = totalEnc > 0
+              ? ((val/totalEnc)*100).toFixed(0) : 0;
+            return `
+              <li>
+                <span style="display:flex;align-items:center;">
+                  <span class="status-dot" style="background:${cor}"></span>
+                  ${label}
+                </span>
+                <span style="display:flex;align-items:center;gap:0.5rem;">
+                  <strong>${val}</strong>
+                  <span class="status-pct">${pct}%</span>
+                </span>
+              </li>`;
+          }).join('');
+
+        // ── Últimas encomendas ────────────────────────────────
+        document.getElementById('tb-ultimas').innerHTML =
+          d.ultimas_encomendas.length
+            ? d.ultimas_encomendas.map(e => `
+                <tr>
+                  <td><code style="font-size:0.72rem">${e.numero}</code></td>
+                  <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;
+                             white-space:nowrap" title="${e.cliente}">
+                    ${e.cliente.split(' ')[0]}
+                  </td>
+                  <td style="font-weight:600">${moeda(e.valor)}</td>
+                  <td>${badgeStatus(e.status)}</td>
+                </tr>`).join('')
+            : vazio('tb-ultimas', 4, 'Nenhuma encomenda registrada');
+
+        // ── Em Produção ───────────────────────────────────────
+        document.getElementById('tb-em-producao').innerHTML =
+          d.em_producao_detalhe.length
+            ? d.em_producao_detalhe.map(e => `
+                <tr>
+                  <td><code style="font-size:0.72rem">${e.numero}</code></td>
+                  <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;
+                             white-space:nowrap" title="${e.cliente}">
+                    ${e.cliente}
+                  </td>
+                  <td style="font-weight:600">${moeda(e.valor)}</td>
+                  <td style="color:#3b82f6;font-size:0.82rem">${fmtData(e.entrega)}</td>
+                </tr>`).join('')
+            : vazio('tb-em-producao', 4, 'Nenhuma em produção');
+
+        // ── Canceladas ────────────────────────────────────────
+        document.getElementById('tb-canceladas').innerHTML =
+          d.canceladas_detalhe.length
+            ? d.canceladas_detalhe.map(e => `
+                <tr>
+                  <td><code style="font-size:0.72rem">${e.numero}</code></td>
+                  <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;
+                             white-space:nowrap" title="${e.cliente}">
+                    ${e.cliente}
+                  </td>
+                  <td style="font-weight:600;color:#ef4444">${moeda(e.valor)}</td>
+                  <td style="font-size:0.82rem;color:#94a3b8">${fmtData(e.data)}</td>
+                </tr>`).join('')
+            : vazio('tb-canceladas', 4, 'Nenhuma cancelada');
+
+        // ── Top Clientes ──────────────────────────────────────
+        document.getElementById('top-clientes-wrap').innerHTML =
+          barras(
+            d.top_clientes.map(c => ({
+              nome:  c.nome,
+              valor: c.total,
+              label: moeda(c.total),
+              sub:   `${c.qtd}x`,
+            })),
+            i => coresBar[i % coresBar.length]
+          );
+
+        // ── Top Produtos ──────────────────────────────────────
+        document.getElementById('top-produtos-wrap').innerHTML =
+          barras(
+            d.top_produtos.map(p => ({
+              nome:  p.nome,
+              valor: p.receita,
+              label: moeda(p.receita),
+              sub:   `${p.qtd}un`,
+            })),
+            i => ['#6366f1','#f59e0b','#14b8a6','#f43f5e','#22c55e'][i % 5]
+          );
+
+        // ── Últimos 30 dias ───────────────────────────────────
+        const u30 = d.ultimos_30_dias;
+        document.getElementById('ultimos-30-wrap').innerHTML = `
+          <div class="alerta-box azul">
+            🛒 <div>
+              <strong>${u30.encomendas} encomenda(s) nos últimos 30 dias</strong><br>
+              <span style="font-size:0.8rem">
+                Faturamento: <strong>${moeda(u30.faturamento)}</strong>
+              </span>
+            </div>
+          </div>
+          <div class="alerta-box ${d.entregas.atrasadas > 0 ? '' : 'verde'}">
+            📅 <div>
+              <strong>Pontualidade nas entregas</strong><br>
+              <span style="font-size:0.8rem">
+                ✅ ${d.entregas.no_prazo} no prazo
+                · ⚠️ ${d.entregas.atrasadas} atrasada(s)
+              </span>
+            </div>
+          </div>
+          ${d.produto_mais_vendido.nome ? `
+          <div class="alerta-box roxo">
+            🏅 <div>
+              <strong>Produto mais vendido:</strong><br>
+              <span style="font-size:0.8rem">
+                ${d.produto_mais_vendido.nome}
+                — ${d.produto_mais_vendido.qtd} unidades
+                (${moeda(d.produto_mais_vendido.receita)})
+              </span>
+            </div>
+          </div>` : ''}`;
+
+        // ── Insights ──────────────────────────────────────────
+        const insights = [];
+        const pctDesc  = d.faturamento_bruto > 0
+          ? ((desconto/d.faturamento_bruto)*100).toFixed(1) : 0;
+        const taxaConv = totalEnc > 0
+          ? ((d.status.entregues/totalEnc)*100).toFixed(0) : 0;
+
+        insights.push(`
+          <div class="alerta-box verde">
+            🎯 <div>
+              <strong>Ticket médio: ${moeda(ticket)}</strong><br>
+              <span style="font-size:0.8rem">por encomenda realizada</span>
+            </div>
+          </div>`);
+
+        insights.push(`
+          <div class="alerta-box ${pctDesc > 15 ? '' : 'verde'}">
+            📉 <div>
+              <strong>${pctDesc}% concedido em descontos</strong><br>
+              <span style="font-size:0.8rem">
+                ${moeda(desconto)} abatidos do bruto
+              </span>
+            </div>
+          </div>`);
+
+        insights.push(`
+          <div class="alerta-box azul">
+            📦 <div>
+              <strong>${taxaConv}% de encomendas entregues</strong><br>
+              <span style="font-size:0.8rem">
+                ${d.status.entregues} de ${totalEnc} concluídas
+              </span>
+            </div>
+          </div>`);
+
+        insights.push(d.maquinas_manutencao > 0 ? `
+          <div class="alerta-box">
+            ⚙️ <div>
+              <strong>${d.maquinas_manutencao} máquina(s) em manutenção</strong><br>
+              <span style="font-size:0.8rem">
+                Verifique o histórico de manutenções
+              </span>
+            </div>
+          </div>` : `
+          <div class="alerta-box verde">
+            ✅ <div>
+              <strong>Todas as máquinas operacionais</strong><br>
+              <span style="font-size:0.8rem">Nenhuma em manutenção</span>
+            </div>
+          </div>`);
+
+        if (d.top_clientes.length > 0) {
+          const top = d.top_clientes[0];
+          insights.push(`
+            <div class="alerta-box verde">
+              🏆 <div>
+                <strong>Melhor cliente:</strong><br>
+                <span style="font-size:0.8rem">
+                  ${top.nome} — ${moeda(top.total)} em ${top.qtd} pedido(s)
+                </span>
+              </div>
+            </div>`);
+        }
+
+        document.getElementById('insights').innerHTML = insights.join('');
+
+        document.getElementById('ts').textContent =
+          'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+
+      } catch (err) {
+        document.getElementById('dash-erro').style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    carregar();
+  </script>
+
+</body>
+</html>

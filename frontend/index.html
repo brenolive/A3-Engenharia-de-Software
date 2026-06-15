@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Madeira Verde — Sistema de Gestão</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="/static/index.html">
+      <span class="logo-icon">🌿</span>Madeira Verde
+    </a>
+    <ul class="navbar-links">
+      <li><a href="/static/fornecedores.html">Fornecedores</a></li>
+      <li><a href="/static/componentes.html">Componentes</a></li>
+      <li><a href="/static/produtos.html">Produtos</a></li>
+      <li><a href="/static/empregados.html">Empregados</a></li>
+      <li><a href="/static/clientes.html">Clientes</a></li>
+      <li><a href="/static/encomendas.html">Encomendas</a></li>
+      <li><a href="/static/manutencoes.html">Manutenções</a></li>
+      <li><a href="/static/dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🏭</span>
+        <div>
+          <h2>Sistema de Gestão — Fábrica de Móveis Madeira Verde</h2>
+          <p style="color: var(--cinza-escuro); font-size:0.9rem; margin-top:0.25rem;">
+            Gerencie clientes, produtos, encomendas e muito mais.
+          </p>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+
+        <a href="/static/fornecedores.html" class="menu-card">
+          <span class="menu-icon">🚚</span>
+          <div class="menu-title">Fornecedores</div>
+          <div class="menu-desc">Parceiros e componentes fornecidos</div>
+        </a>
+
+        <a href="/static/componentes.html" class="menu-card">
+          <span class="menu-icon">🔩</span>
+          <div class="menu-title">Componentes</div>
+          <div class="menu-desc">Matéria-prima, materiais, máquinas e ferramentas</div>
+        </a>
+
+        <a href="/static/produtos.html" class="menu-card">
+          <span class="menu-icon">🪑</span>
+          <div class="menu-title">Produtos</div>
+          <div class="menu-desc">Catálogo de móveis e seus componentes</div>
+        </a>
+
+        <a href="/static/empregados.html" class="menu-card">
+          <span class="menu-icon">👷</span>
+          <div class="menu-title">Empregados</div>
+          <div class="menu-desc">Equipe com supervisão hierárquica</div>
+        </a>
+
+        <a href="/static/clientes.html" class="menu-card">
+          <span class="menu-icon">🏢</span>
+          <div class="menu-title">Clientes</div>
+          <div class="menu-desc">Cadastro de clientes PJ</div>
+        </a>
+
+        <a href="/static/encomendas.html" class="menu-card">
+          <span class="menu-icon">📋</span>
+          <div class="menu-title">Encomendas</div>
+          <div class="menu-desc">Pedidos com cálculo automático de valores</div>
+        </a>
+
+        <a href="/static/manutencoes.html" class="menu-card">
+          <span class="menu-icon">🔧</span>
+          <div class="menu-title">Manutenções</div>
+          <div class="menu-desc">Histórico de manutenção de máquinas</div>
+        </a>
+
+        <a href="/static/dashboard.html" class="menu-card">
+          <span class="menu-icon">📊</span>
+          <div class="menu-title">Dashboard</div>
+          <div class="menu-desc">Indicadores e estatísticas do sistema</div>
+        </a>
+
+      </div>
+    </div>
+
+    <div class="card" id="status-card">
+      <div class="card-header">
+        <span class="icon">📡</span>
+        <h2>Status do Sistema</h2>
+      </div>
+      <div id="status-content">
+        <div class="alert alert-info">⏳ Verificando conexão com a API...</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>🌿 Madeira Verde</p>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const statusContent = document.getElementById("status-content");
+      try {
+        const data = await API.get("/health");
+        statusContent.innerHTML = `
+          <div class="alert alert-success">
+            ✅ API online e funcionando. Sistema pronto para uso.
+          </div>
+          <p style="font-size:0.85rem; color: var(--cinza-escuro); margin-top:0.5rem;">
+            Documentação:
+            <a href="http://localhost:8000/docs" target="_blank"
+               style="color: var(--verde-claro)">
+              http://localhost:8000/docs
+            </a>
+          </p>
+        `;
+      } catch (e) {
+        statusContent.innerHTML = `
+          <div class="alert alert-error">
+            ❌ API offline. Certifique-se de que o backend está rodando em
+            <strong>http://localhost:8000</strong>
+          </div>
+        `;
+      }
+    });
+  </script>
+
+</body>
+</html>
