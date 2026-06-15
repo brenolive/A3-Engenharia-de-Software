@@ -1,4 +1,4 @@
-# 🌿 Sistema de Gestão Madeira Verde
+#  Sistema de Gestão Madeira Verde
 
 > Trabalho Acadêmico — A3 2026/1 · Modelos, Métodos e Técnicas de Engenharia de Software  
 > Universidade Anhembi Morumbi — Ciências da Computação
@@ -11,7 +11,7 @@
 
 ---
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
 A **Fábrica de Móveis Madeira Verde** é uma empresa de manufatura que produz móveis sob encomenda, atendendo exclusivamente a **pessoas jurídicas** — varejistas de diversas regiões do Brasil.
 
@@ -30,16 +30,16 @@ Diante do crescimento da demanda e da complexidade operacional, foi desenvolvido
 
 | Integrante | RA | Responsabilidade |
 |---|---|---|
-| **Breno Oliveira** | 12523143979 | Arquitetura, DevOps e Metodologias |
-| **Cauã Máximo** | 12523138074 | Engenharia de Requisitos e Viabilidade |
-| **Diego Maia** | 12523169668 | UML e Análise de Sistema |
-| **Kauê Scatigno** | 12523164338 | Modelagem e Banco de Dados |
+| **Breno Oliveira** | Arquitetura, DevOps e Metodologias |
+| **Cauã Máximo** | Engenharia de Requisitos e Viabilidade |
+| **Diego Maia** | UML e Análise de Sistema |
+| **Kauê Scatigno** | Modelagem e Banco de Dados |
 
 **Professor:** W. Fernando
 
 ---
 
-## 🛠️ Stack Tecnológica
+##  Stack Tecnológica
 
 | Componente | Tecnologia |
 |---|---|
@@ -57,7 +57,7 @@ Diante do crescimento da demanda e da complexidade operacional, foi desenvolvido
 
 ---
 
-## 📁 Estrutura do Projeto
+##  Estrutura do Projeto
 
 ```
 madeira_verde/
@@ -110,7 +110,7 @@ madeira_verde/
 
 ---
 
-## 🚀 Como Executar
+##  Como Executar
 
 ### Pré-requisitos
 
@@ -167,7 +167,7 @@ python scripts/seed_empregados_antigos.py
 
 ---
 
-## 🧪 Executando os Testes
+## Executando os Testes
 
 ```bash
 pytest tests/ -v
@@ -190,7 +190,7 @@ pytest tests/ -v
 
 ---
 
-## 🏗️ Arquitetura
+##  Arquitetura
 
 O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
@@ -216,7 +216,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 🎯 Padrões de Projeto Implementados
+## Padrões de Projeto Implementados
 
 | Padrão | Implementação | Localização |
 |---|---|---|
@@ -228,7 +228,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 🗄️ Banco de Dados — 10 Entidades (3FN)
+## Banco de Dados — 10 Entidades (3FN)
 
 | Entidade | Destaques |
 |---|---|
@@ -249,7 +249,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 📜 Regras de Negócio
+##  Regras de Negócio
 
 | Código | Regra |
 |---|---|
@@ -266,7 +266,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 📊 Requisitos Funcionais (16)
+##  Requisitos Funcionais (16)
 
 | Código | Requisito |
 |---|---|
@@ -289,7 +289,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 🔒 Requisitos Não Funcionais (9)
+##  Requisitos Não Funcionais (9)
 
 | Código | Requisito |
 |---|---|
@@ -305,7 +305,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 🏃 Sprints do Projeto (Scrum)
+## Sprints do Projeto (Scrum)
 
 | Sprint | Escopo | Entregável |
 |---|---|---|
@@ -317,7 +317,7 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 
 ---
 
-## 📈 Dados do Banco (Seed)
+## Dados do Banco (Seed)
 
 | Entidade | Quantidade |
 |---|---|
@@ -331,15 +331,15 @@ O sistema segue a **Arquitetura em Três Camadas (Three-Tier Architecture)**:
 | Manutenções | 5 (3 PREVENTIVA · 2 CORRETIVA) |
 
 **KPIs do Dashboard:**
-- 💰 Faturamento bruto: **R$ 130.110,00**
-- 💵 Faturamento líquido: **R$ 119.764,10**
-- 🎯 Ticket médio: **R$ 9.980,34**
-- 🏆 Top cliente: **Hotel Serra Verde** — R$ 23.292,00
-- 🏆 Top produto: **Cadeira de Jantar** — 46 unidades
+-  Faturamento bruto: **R$ 130.110,00**
+-  Faturamento líquido: **R$ 119.764,10**
+-  Ticket médio: **R$ 9.980,34**
+-  Top cliente: **Hotel Serra Verde** — R$ 23.292,00
+-  Top produto: **Cadeira de Jantar** — 46 unidades
 
 ---
 
-## 🔧 Comandos Úteis
+##  Comandos Úteis
 
 ```bash
 # Subir o servidor
@@ -360,7 +360,7 @@ pytest tests/ -v --tb=short
 
 ---
 
-## 📄 Documentação
+##  Documentação
 
 A documentação completa do projeto (29 páginas) está disponível no arquivo `A3 Engenharia de Software.pdf`, contendo:
 
@@ -381,7 +381,7 @@ A documentação completa do projeto (29 páginas) está disponível no arquivo 
 
 ---
 
-## 📌 Observações
+##  Observações
 
 > Este projeto foi desenvolvido exclusivamente para fins acadêmicos como parte da disciplina **Modelos, Métodos e Técnicas de Engenharia de Software** — A3 2026/1.
 
